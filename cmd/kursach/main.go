@@ -42,6 +42,7 @@ func main() {
 	userHandler := handlers.UserHandler{UserStorage: postgres.NewUserStorage(db.DB())}
 	updateUserHandler := handlers.UpdateUserHandler{UserStorage: postgres.NewUserStorage(db.DB())}
 	postHandler := handlers.PostHandler{PostStorage: postgres.NewPostStorage(db.DB()), UserStorage: postgres.NewUserStorage(db.DB())}
+	notificationHandler := handlers.NotificationHandler{NotificationStorage: postgres.NewNotificationStorage(db.DB())}
 	fs := http.FileServer(http.Dir("./uploads"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
@@ -60,6 +61,16 @@ func main() {
 	router.Delete("/comments", postHandler.DeleteCommentHandler)
 
 	router.Post("/token", handlers.ValidateTokenHandler)
+
+	router.Get("/notifications", notificationHandler.GetUnreadNotificationsHandler)
+
+	router.Post("/blocks", postHandler.AddBlockHandler)
+	router.Get("/blocks", postHandler.CheckBlockHandler)
+	router.Delete("/blocks", postHandler.RemoveBlockHandler)
+
+	router.Post("/follows", postHandler.AddFollowHandler)
+	router.Delete("/follows", postHandler.RemoveFollowHandler)
+	router.Get("/follows", postHandler.GetFollowingsHandler)
 
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	srv := &http.Server{
