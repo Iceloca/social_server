@@ -47,7 +47,7 @@ func main() {
 
 	router.Post("/register", userHandler.Register)
 	router.Post("/auth", userHandler.Login)
-	router.Patch("/user", updateUserHandler.ServeHTTP)
+	router.Patch("/users", updateUserHandler.ServeHTTP)
 
 	router.Post("/posts", postHandler.AddPost)
 
