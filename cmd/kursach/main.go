@@ -54,6 +54,9 @@ func main() {
 	router.Post("/likes", postHandler.AddLikeHandler)
 	router.Delete("/likes", postHandler.RemoveLikeHandler)
 
+	router.Post("/comments", postHandler.AddCommentHandler)
+	router.Delete("/comments", postHandler.DeleteCommentHandler)
+
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	srv := &http.Server{
 		Addr:         cfg.HTTPServer.Address,
