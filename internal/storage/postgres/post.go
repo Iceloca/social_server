@@ -176,3 +176,62 @@ func (s *PostStorage) GetPosts(ctx context.Context, userID *int, startIndex, amo
 
 	return posts, hasMore, nil
 }
+
+func (s *PostStorage) DeletePost(ctx context.Context, postID int) error {
+	const query = `DELETE FROM posts WHERE post_id = $1`
+	_, err := s.db.ExecContext(ctx, query, postID)
+	return err
+}
+
+func (s *PostStorage) GetFavoritePosts(ctx context.Context, userID, startIndex, amount int) ([]PostResponse, bool, error) {
+	const baseQuery = `
+		SELECT post_id, title, description, image_url, post_created_at, author_id, author_user_name, like_count
+		FROM view_favorite_post_summary
+		WHERE favorited_by_user_id = $1
+		ORDER BY post_created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+
+	rows, err := s.db.QueryContext(ctx, baseQuery, userID, amount, startIndex)
+	if err != nil {
+		return nil, false, err
+	}
+	defer rows.Close()
+
+	var posts []PostResponse
+	for rows.Next() {
+		var post PostResponse
+		if err := rows.Scan(
+			&post.PostID, &post.Title, &post.Description, &post.ImageURL,
+			&post.CreatedAt, &post.AuthorID, &post.AuthorName, &post.LikeCount,
+		); err != nil {
+			return nil, false, err
+		}
+
+		comments, err := s.GetCommentsByPostID(ctx, post.PostID)
+		if err != nil {
+			return nil, false, err
+		}
+		post.Comments = comments
+
+		tags, err := s.GetTagsByPostID(ctx, post.PostID)
+		if err != nil {
+			return nil, false, err
+		}
+		post.Tags = tags
+
+		posts = append(posts, post)
+	}
+
+	var totalCount int
+	err = s.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM view_favorite_post_summary WHERE favorited_by_user_id = $1`, userID,
+	).Scan(&totalCount)
+	if err != nil {
+		return nil, false, err
+	}
+
+	hasMore := startIndex+amount < totalCount
+
+	return posts, hasMore, nil
+}

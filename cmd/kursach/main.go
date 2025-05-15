@@ -53,6 +53,7 @@ func main() {
 
 	router.Post("/posts", postHandler.AddPost)
 	router.Get("/posts", postHandler.GetPostsHandler)
+	router.Delete("/posts", postHandler.DeletePostHandler)
 
 	router.Post("/likes", postHandler.AddLikeHandler)
 	router.Delete("/likes", postHandler.RemoveLikeHandler)
@@ -71,6 +72,10 @@ func main() {
 	router.Post("/follows", postHandler.AddFollowHandler)
 	router.Delete("/follows", postHandler.RemoveFollowHandler)
 	router.Get("/follows", postHandler.GetFollowingsHandler)
+
+	router.Post("/favorites", postHandler.AddToFavoritesHandler)
+	router.Delete("/favorites", postHandler.RemoveFromFavoritesHandler)
+	router.Get("/favorites", postHandler.GetFavoritePostsHandler)
 
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	srv := &http.Server{

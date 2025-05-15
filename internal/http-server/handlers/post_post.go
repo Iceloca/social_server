@@ -174,3 +174,58 @@ func (h *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
+
+func (h *PostHandler) DeletePostHandler(w http.ResponseWriter, r *http.Request) {
+	postIDStr := r.URL.Query().Get("post_id")
+	postID, err := strconv.Atoi(postIDStr)
+	if err != nil {
+		http.Error(w, "Invalid post_id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.PostStorage.DeletePost(r.Context(), postID); err != nil {
+		http.Error(w, "Failed to delete post", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+func (h *PostHandler) GetFavoritePostsHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	startIndexStr := query.Get("startIndex")
+	amountStr := query.Get("amount")
+	userIDStr := query.Get("userId")
+
+	startIndex, err := strconv.Atoi(startIndexStr)
+	if err != nil {
+		http.Error(w, "Invalid startIndex", http.StatusBadRequest)
+		return
+	}
+
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		http.Error(w, "Invalid amount", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid userId", http.StatusBadRequest)
+		return
+	}
+
+	posts, hasMore, err := h.PostStorage.GetFavoritePosts(r.Context(), userID, startIndex, amount)
+	if err != nil {
+		http.Error(w, "Failed to get favorite posts", http.StatusInternalServerError)
+		return
+	}
+
+	resp := PostsResult{
+		Posts:   posts,
+		HasMore: hasMore,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}

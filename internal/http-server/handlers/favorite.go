@@ -6,27 +6,27 @@ import (
 	"strconv"
 )
 
-type LikeRequest struct {
+type FavoriteRequest struct {
 	UserID int `json:"user_id"`
 	PostID int `json:"post_id"`
 }
 
-func (h *PostHandler) AddLikeHandler(w http.ResponseWriter, r *http.Request) {
-	var req LikeRequest
+func (h *PostHandler) AddToFavoritesHandler(w http.ResponseWriter, r *http.Request) {
+	var req FavoriteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.PostStorage.AddLike(r.Context(), req.UserID, req.PostID); err != nil {
-		http.Error(w, "Could not add like", http.StatusInternalServerError)
+	if err := h.PostStorage.AddToFavorites(r.Context(), req.UserID, req.PostID); err != nil {
+		http.Error(w, "Failed to add to favorites", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *PostHandler) RemoveLikeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PostHandler) RemoveFromFavoritesHandler(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.URL.Query().Get("user_id")
 	postIDStr := r.URL.Query().Get("post_id")
 
@@ -37,8 +37,8 @@ func (h *PostHandler) RemoveLikeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.PostStorage.RemoveLike(r.Context(), userID, postID); err != nil {
-		http.Error(w, "Could not remove like", http.StatusInternalServerError)
+	if err := h.PostStorage.RemoveFromFavorites(r.Context(), userID, postID); err != nil {
+		http.Error(w, "Failed to remove from favorites", http.StatusInternalServerError)
 		return
 	}
 
