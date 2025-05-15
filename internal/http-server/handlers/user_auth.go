@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"kursach/internal/auth"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -65,4 +66,28 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *UserHandler) GetUserInfoHandler(w http.ResponseWriter, r *http.Request) {
+	// Получаем userId из query-параметров
+	userIDStr := r.URL.Query().Get("userId")
+	if userIDStr == "" {
+		http.Error(w, "Missing userId parameter", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid userId parameter", http.StatusBadRequest)
+		return
+	}
+
+	userInfo, err := h.UserStorage.GetUserInfo(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userInfo)
 }

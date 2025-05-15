@@ -48,6 +48,7 @@ func main() {
 	router.Post("/register", userHandler.Register)
 	router.Post("/auth", userHandler.Login)
 	router.Patch("/users", updateUserHandler.ServeHTTP)
+	router.Get("/users", userHandler.GetUserInfoHandler)
 
 	router.Post("/posts", postHandler.AddPost)
 	router.Get("/posts", postHandler.GetPostsHandler)
@@ -57,6 +58,8 @@ func main() {
 
 	router.Post("/comments", postHandler.AddCommentHandler)
 	router.Delete("/comments", postHandler.DeleteCommentHandler)
+
+	router.Post("/token", handlers.ValidateTokenHandler)
 
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	srv := &http.Server{
