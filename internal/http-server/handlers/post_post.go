@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,6 +18,15 @@ import (
 type PostHandler struct {
 	UserStorage *postgres.UserStorage
 	PostStorage *postgres.PostStorage
+}
+type PostsResult struct {
+	Posts   []postgres.PostResponse `json:"posts"`
+	HasMore bool                    `json:"hasMore"`
+}
+type GetPostsRequest struct {
+	StartIndex int  `json:"start_index"`
+	Amount     int  `json:"amount"`
+	UserID     *int `json:"user_id,omitempty"` // опционально
 }
 
 func (h *PostHandler) AddPost(w http.ResponseWriter, r *http.Request) {
@@ -113,4 +123,54 @@ func (h *PostHandler) AddPost(w http.ResponseWriter, r *http.Request) {
 	// Отдаем ответ с новым постом
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(newPost)
+}
+func (h *PostHandler) GetPostsHandler(w http.ResponseWriter, r *http.Request) {
+	// Чтение query-параметров
+	query := r.URL.Query()
+
+	startIndexStr := query.Get("startIndex")
+	amountStr := query.Get("amount")
+	userIDStr := query.Get("userId") // может быть пустым
+
+	// Парсим startIndex
+	startIndex, err := strconv.Atoi(startIndexStr)
+	if err != nil {
+		http.Error(w, "Invalid startIndex", http.StatusBadRequest)
+		return
+	}
+
+	// Парсим amount
+	amount, err := strconv.Atoi(amountStr)
+	if err != nil {
+		http.Error(w, "Invalid amount", http.StatusBadRequest)
+		return
+	}
+
+	// userId — опционален
+	var userID *int
+	if userIDStr != "" {
+		uid, err := strconv.Atoi(userIDStr)
+		if err != nil {
+			http.Error(w, "Invalid userId", http.StatusBadRequest)
+			return
+		}
+		userID = &uid
+	}
+
+	// Получаем посты
+	posts, hasMore, err := h.PostStorage.GetPosts(r.Context(), userID, startIndex, amount)
+	log.Println(err)
+	if err != nil {
+		http.Error(w, "Failed to get posts", http.StatusInternalServerError)
+		return
+	}
+
+	// Формируем ответ
+	resp := PostsResult{
+		Posts:   posts,
+		HasMore: hasMore,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }

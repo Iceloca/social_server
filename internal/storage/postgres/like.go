@@ -3,11 +3,7 @@ package postgres
 import "context"
 
 func (s *PostStorage) AddLike(ctx context.Context, userID, postID int) error {
-	const query = `
-		INSERT INTO likes (user_id, post_id)
-		VALUES ($1, $2)
-		ON CONFLICT DO NOTHING
-	`
+	const query = `CALL like_post($1, $2)`
 	_, err := s.db.ExecContext(ctx, query, userID, postID)
 	return err
 }

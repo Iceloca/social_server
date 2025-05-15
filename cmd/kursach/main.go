@@ -50,6 +50,7 @@ func main() {
 	router.Patch("/users", updateUserHandler.ServeHTTP)
 
 	router.Post("/posts", postHandler.AddPost)
+	router.Get("/posts", postHandler.GetPostsHandler)
 
 	router.Post("/likes", postHandler.AddLikeHandler)
 	router.Delete("/likes", postHandler.RemoveLikeHandler)
