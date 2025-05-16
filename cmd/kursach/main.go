@@ -79,6 +79,8 @@ func main() {
 
 	router.Post("/reports", postHandler.CreateReportHandler)
 
+	router.Get("/tags", postHandler.GetAllTagsHandler)
+
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	http.Handle("/", withCORS(router))
 	srv := &http.Server{

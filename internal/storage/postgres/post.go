@@ -235,3 +235,25 @@ func (s *PostStorage) GetFavoritePosts(ctx context.Context, userID, startIndex, 
 
 	return posts, hasMore, nil
 }
+
+func (s *PostStorage) GetAllTags(ctx context.Context) ([]map[string]interface{}, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT tag_id, name FROM tags")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []map[string]interface{}
+	for rows.Next() {
+		var id int
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		tags = append(tags, map[string]interface{}{
+			"tag_id": id,
+			"name":   name,
+		})
+	}
+	return tags, nil
+}

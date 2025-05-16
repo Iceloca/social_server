@@ -229,3 +229,13 @@ func (h *PostHandler) GetFavoritePostsHandler(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
 }
+
+func (h *PostHandler) GetAllTagsHandler(w http.ResponseWriter, r *http.Request) {
+	tags, err := h.PostStorage.GetAllTags(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch tags", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tags)
+}
