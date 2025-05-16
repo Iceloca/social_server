@@ -78,9 +78,10 @@ func main() {
 	router.Get("/favorites", postHandler.GetFavoritePostsHandler)
 
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
+	http.Handle("/", withCORS(router))
 	srv := &http.Server{
 		Addr:         cfg.HTTPServer.Address,
-		Handler:      router,
+		Handler:      withCORS(router),
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		WriteTimeout: cfg.HTTPServer.Timeout,
 		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
@@ -108,4 +109,21 @@ func setupLogger(env string) *slog.Logger {
 		)
 	}
 	return log
+}
+
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Разрешаем доступ с любых источников (можно заменить на конкретный origin)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Для preflight-запросов сразу отвечаем
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
