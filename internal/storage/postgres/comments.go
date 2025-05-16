@@ -16,20 +16,17 @@ type Comment struct {
 }
 
 func (s *PostStorage) AddComment(ctx context.Context, comment *Comment) error {
-	const query = `CALL comment_post($1, $2, $3)`
-	_ = s.db.QueryRowContext(ctx, query, comment.AuthorID, comment.PostID, comment.Text)
+	const query = `SELECT comment_post($1, $2, $3)`
+	err := s.db.QueryRowContext(ctx, query, comment.AuthorID, comment.PostID, comment.Text).
+		Scan(&comment.ID)
+	if err != nil {
+		return err
+	}
 
-	// Если нужно вернуть ID и CreatedAt, можно возвращать их из процедуры через OUT-параметры или
-	// сразу после CALL делать SELECT:
-	const getQuery = `
-		SELECT comment_id, created_at
-		FROM comments
-		WHERE author_id = $1 AND post_id = $2
-		ORDER BY created_at DESC
-		LIMIT 1
-	`
-	return s.db.QueryRowContext(ctx, getQuery, comment.AuthorID, comment.PostID).
-		Scan(&comment.ID, &comment.CreatedAt)
+	// Получим CreatedAt по ID
+	const createdAtQuery = `SELECT created_at FROM comments WHERE comment_id = $1`
+	return s.db.QueryRowContext(ctx, createdAtQuery, comment.ID).
+		Scan(&comment.CreatedAt)
 }
 
 func (s *PostStorage) DeleteComment(ctx context.Context, commentID int, userID int) error {
