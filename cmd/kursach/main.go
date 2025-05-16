@@ -61,7 +61,7 @@ func main() {
 	router.Post("/comments", postHandler.AddCommentHandler)
 	router.Delete("/comments", postHandler.DeleteCommentHandler)
 
-	router.Post("/token", handlers.ValidateTokenHandler)
+	router.Post("/token", handlers.ValidateTokenHandler(*postgres.NewUserStorage(db.DB())))
 
 	router.Get("/notifications", notificationHandler.GetUnreadNotificationsHandler)
 
