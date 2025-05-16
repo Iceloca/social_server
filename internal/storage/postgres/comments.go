@@ -16,7 +16,7 @@ type Comment struct {
 }
 
 func (s *PostStorage) AddComment(ctx context.Context, comment *Comment) error {
-	const query = `SELECT comment_post($1, $2, $3)`
+	const query = `SELECT create_comment($1, $2, $3)`
 	err := s.db.QueryRowContext(ctx, query, comment.AuthorID, comment.PostID, comment.Text).
 		Scan(&comment.ID)
 	if err != nil {
