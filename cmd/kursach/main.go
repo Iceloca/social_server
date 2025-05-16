@@ -77,6 +77,8 @@ func main() {
 	router.Delete("/favorites", postHandler.RemoveFromFavoritesHandler)
 	router.Get("/favorites", postHandler.GetFavoritePostsHandler)
 
+	router.Post("/reports", postHandler.CreateReportHandler)
+
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 	http.Handle("/", withCORS(router))
 	srv := &http.Server{
